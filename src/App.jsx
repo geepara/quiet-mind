@@ -83,18 +83,10 @@ function useSpeechRecognition() {
   return { isListening, transcript, startListening, stopListening, supported, clearTranscript: () => setTranscript('') }
 }
 
-function CaptureScreen({ currentMode, onNavigate }) {
+function CaptureScreen() {
   const [text, setText] = useState('')
   const [ideas, setIdeas] = useLocalStorage('night-modes-ideas', [])
   const inputRef = useRef(null)
-  const { isListening, transcript, startListening, stopListening, supported, clearTranscript } = useSpeechRecognition()
-
-  useEffect(() => {
-    if (transcript) {
-      setText(prev => prev ? `${prev} ${transcript}` : transcript)
-      clearTranscript()
-    }
-  }, [transcript, clearTranscript])
 
   const handleCapture = () => {
     if (!text.trim()) return
@@ -116,53 +108,27 @@ function CaptureScreen({ currentMode, onNavigate }) {
     }
   }
 
-  const mode = currentMode ? MODES[currentMode] : null
-
   return (
-    <>
-      {mode && (
-        <div className={`mode-banner ${currentMode}`} onClick={() => onNavigate('modes')}>
-          <div className="mode-label">Tonight's Mode</div>
-          <div className="mode-name">{mode.name}</div>
-          <div className="mode-affirmation">{mode.affirmation}</div>
-        </div>
-      )}
-
-      {!mode && (
-        <div className="mode-banner" onClick={() => onNavigate('modes')}>
-          <div className="mode-affirmation">Tap to choose tonight's mode</div>
-        </div>
-      )}
-
-      <div className="capture-section">
-        <textarea
-          ref={inputRef}
-          className="capture-input"
-          placeholder="Capture an idea..."
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={handleKeyDown}
-          autoFocus
-        />
-        <div className="capture-actions">
-          <button
-            className="btn btn-capture"
-            onClick={handleCapture}
-            disabled={!text.trim()}
-          >
-            Capture
-          </button>
-          {supported && (
-            <button
-              className={`btn btn-voice ${isListening ? 'listening' : ''}`}
-              onClick={isListening ? stopListening : startListening}
-            >
-              {isListening ? '■' : '🎤'}
-            </button>
-          )}
-        </div>
+    <div className="capture-section">
+      <textarea
+        ref={inputRef}
+        className="capture-input"
+        placeholder="Capture an idea..."
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onKeyDown={handleKeyDown}
+        autoFocus
+      />
+      <div className="capture-actions">
+        <button
+          className="btn btn-capture"
+          onClick={handleCapture}
+          disabled={!text.trim()}
+        >
+          Capture
+        </button>
       </div>
-    </>
+    </div>
   )
 }
 
@@ -295,6 +261,15 @@ function SettingsScreen() {
   )
 }
 
+function WeekendPlannerScreen() {
+  return (
+    <div className="weekend-screen">
+      <h2 className="weekend-header">Weekend Planner</h2>
+      <div className="empty-state">Coming soon — plan your ideal weekend here.</div>
+    </div>
+  )
+}
+
 function App() {
   const [screen, setScreen] = useState('capture')
   const [currentMode, setCurrentMode] = useLocalStorage('night-modes-current-mode', null)
@@ -321,40 +296,51 @@ function App() {
 
   return (
     <div className="app">
-      {screen === 'capture' && (
-        <CaptureScreen
-          currentMode={currentMode}
-          onNavigate={setScreen}
-        />
-      )}
-      {screen === 'modes' && (
-        <ModeSelection
-          currentMode={currentMode}
-          onSelectMode={handleSelectMode}
-          onNavigate={setScreen}
-        />
-      )}
-      {screen === 'ideas' && <IdeasScreen />}
-      {screen === 'settings' && <SettingsScreen />}
+      <div className="screen-content">
+        {screen === 'capture' && <CaptureScreen />}
+        {screen === 'modes' && (
+          <ModeSelection
+            currentMode={currentMode}
+            onSelectMode={handleSelectMode}
+            onNavigate={setScreen}
+          />
+        )}
+        {screen === 'ideas' && <IdeasScreen />}
+        {screen === 'settings' && <SettingsScreen />}
+        {screen === 'weekend' && <WeekendPlannerScreen />}
+      </div>
 
       <nav className="nav-bar">
         <button
-          className={`nav-btn ${screen === 'capture' ? 'active' : ''}`}
+          className={`nav-btn ${screen === 'modes' ? 'active' : ''}`}
+          onClick={() => setScreen('modes')}
+          aria-label="Night Mode"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+        </button>
+        <button
+          className={`nav-btn nav-btn-center ${screen === 'capture' ? 'active' : ''}`}
           onClick={() => setScreen('capture')}
+          aria-label="New Note"
         >
-          Capture
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
         </button>
         <button
-          className={`nav-btn ${screen === 'ideas' ? 'active' : ''}`}
-          onClick={() => setScreen('ideas')}
+          className={`nav-btn ${screen === 'weekend' ? 'active' : ''}`}
+          onClick={() => setScreen('weekend')}
+          aria-label="Weekend Planner"
         >
-          Ideas
-        </button>
-        <button
-          className={`nav-btn ${screen === 'settings' ? 'active' : ''}`}
-          onClick={() => setScreen('settings')}
-        >
-          Settings
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
         </button>
       </nav>
     </div>
