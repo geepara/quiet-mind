@@ -83,18 +83,10 @@ function useSpeechRecognition() {
   return { isListening, transcript, startListening, stopListening, supported, clearTranscript: () => setTranscript('') }
 }
 
-function CaptureScreen({ currentMode, onNavigate }) {
+function CaptureScreen() {
   const [text, setText] = useState('')
   const [ideas, setIdeas] = useLocalStorage('night-modes-ideas', [])
   const inputRef = useRef(null)
-  const { isListening, transcript, startListening, stopListening, supported, clearTranscript } = useSpeechRecognition()
-
-  useEffect(() => {
-    if (transcript) {
-      setText(prev => prev ? `${prev} ${transcript}` : transcript)
-      clearTranscript()
-    }
-  }, [transcript, clearTranscript])
 
   const handleCapture = () => {
     if (!text.trim()) return
@@ -116,53 +108,27 @@ function CaptureScreen({ currentMode, onNavigate }) {
     }
   }
 
-  const mode = currentMode ? MODES[currentMode] : null
-
   return (
-    <>
-      {mode && (
-        <div className={`mode-banner ${currentMode}`} onClick={() => onNavigate('modes')}>
-          <div className="mode-label">Tonight's Mode</div>
-          <div className="mode-name">{mode.name}</div>
-          <div className="mode-affirmation">{mode.affirmation}</div>
-        </div>
-      )}
-
-      {!mode && (
-        <div className="mode-banner" onClick={() => onNavigate('modes')}>
-          <div className="mode-affirmation">Tap to choose tonight's mode</div>
-        </div>
-      )}
-
-      <div className="capture-section">
-        <textarea
-          ref={inputRef}
-          className="capture-input"
-          placeholder="Capture an idea..."
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={handleKeyDown}
-          autoFocus
-        />
-        <div className="capture-actions">
-          <button
-            className="btn btn-capture"
-            onClick={handleCapture}
-            disabled={!text.trim()}
-          >
-            Capture
-          </button>
-          {supported && (
-            <button
-              className={`btn btn-voice ${isListening ? 'listening' : ''}`}
-              onClick={isListening ? stopListening : startListening}
-            >
-              {isListening ? '■' : '🎤'}
-            </button>
-          )}
-        </div>
+    <div className="capture-section">
+      <textarea
+        ref={inputRef}
+        className="capture-input"
+        placeholder="Capture an idea..."
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onKeyDown={handleKeyDown}
+        autoFocus
+      />
+      <div className="capture-actions">
+        <button
+          className="btn btn-capture"
+          onClick={handleCapture}
+          disabled={!text.trim()}
+        >
+          Capture
+        </button>
       </div>
-    </>
+    </div>
   )
 }
 
@@ -331,12 +297,7 @@ function App() {
   return (
     <div className="app">
       <div className="screen-content">
-        {screen === 'capture' && (
-          <CaptureScreen
-            currentMode={currentMode}
-            onNavigate={setScreen}
-          />
-        )}
+        {screen === 'capture' && <CaptureScreen />}
         {screen === 'modes' && (
           <ModeSelection
             currentMode={currentMode}
