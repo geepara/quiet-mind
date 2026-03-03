@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, type Dispatch, type SetStateAction, type KeyboardEvent } from 'react'
+import { useWebHaptics } from 'web-haptics/react'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 
 // --- Types ---
@@ -226,6 +227,7 @@ function App() {
   const [captureText, setCaptureText] = useState('')
   const [ideas, setIdeas] = useLocalStorage<Idea[]>('night-modes-ideas', [])
   const captureInputRef = useRef<HTMLTextAreaElement>(null)
+  const { trigger: haptic } = useWebHaptics()
 
   useEffect(() => {
     const today = new Date().toDateString()
@@ -242,7 +244,11 @@ function App() {
   }, [])
 
   const handleSelectMode = (mode: Mode) => {
-    setCurrentMode(mode)
+    if (currentMode === mode) {
+      setCurrentMode(null)
+    } else {
+      setCurrentMode(mode)
+    }
     setModeDate(new Date().toDateString())
   }
 
@@ -264,10 +270,10 @@ function App() {
     }
   }
 
-  const modeBgColors: Record<Mode, string> = {
-    recovery: 'rgba(74, 111, 165, 0.08)',
-    'recovery-creation': 'rgba(107, 91, 149, 0.08)',
-    ambition: 'rgba(212, 165, 116, 0.08)',
+  const modeColors: Record<Mode, { bg: string; icon: string }> = {
+    recovery: { bg: 'rgba(74, 111, 165, 0.08)', icon: 'rgb(74, 111, 165)' },
+    'recovery-creation': { bg: 'rgba(107, 91, 149, 0.08)', icon: 'rgb(107, 91, 149)' },
+    ambition: { bg: 'rgba(212, 165, 116, 0.08)', icon: 'rgb(212, 165, 116)' },
   }
 
   const navBtnBase = 'flex-1 h-11 text-[0px] font-[inherit] bg-transparent border-none rounded-xl cursor-pointer transition-all duration-[250ms] ease-in-out flex items-center justify-center touch-manipulation relative'
@@ -277,7 +283,7 @@ function App() {
   return (
     <div
       className="flex flex-1 flex-col px-6 py-4 pt-[env(safe-area-inset-top,1rem)] pb-[env(safe-area-inset-bottom,1rem)] max-w-[480px] mx-auto w-full transition-[background-color] duration-700 ease-in-out"
-      style={{ backgroundColor: currentMode ? modeBgColors[currentMode] : undefined }}
+      style={{ backgroundColor: currentMode ? modeColors[currentMode].bg : undefined }}
     >
       <div className="flex flex-1 flex-col">
         {screen === 'modes' && (
@@ -294,9 +300,10 @@ function App() {
       <div className="flex items-center gap-3 mt-auto">
         <nav className="flex flex-1 justify-center items-center gap-1 p-1 bg-glass-bg backdrop-blur-[40px] backdrop-saturate-[1.8] border border-glass-border rounded-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_4px_16px_rgba(0,0,0,0.3)]">
           <button
-            className={`${navBtnBase} ${screen === 'modes' ? navBtnActive : navBtnInactive}`}
-            onClick={() => setScreen('modes')}
-            aria-label="Night Mode"
+            className={`${navBtnBase} ${screen === 'modes' ? navBtnActive : navBtnInactive} transition-colors`}
+            onClick={() => { haptic('nudge'); setScreen('modes') }}
+            aria-label="Quiet Mind"
+            style={{ color: currentMode ? modeColors[currentMode].icon : undefined }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
@@ -304,7 +311,7 @@ function App() {
           </button>
           <button
             className={`${navBtnBase} ${screen === 'ideas' ? navBtnActive : navBtnInactive}`}
-            onClick={() => setScreen('ideas')}
+            onClick={() => { haptic('nudge'); setScreen('ideas') }}
             aria-label="Ideas"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -315,7 +322,7 @@ function App() {
           </button>
           <button
             className={`${navBtnBase} ${screen === 'weekend' ? navBtnActive : navBtnInactive}`}
-            onClick={() => setScreen('weekend')}
+            onClick={() => { haptic('nudge'); setScreen('weekend') }}
             aria-label="Weekend Planner"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -329,7 +336,7 @@ function App() {
 
         <button
           className="w-11 h-11 flex-shrink-0 bg-glass-bg backdrop-blur-[40px] backdrop-saturate-[1.8] border border-glass-border rounded-full cursor-pointer transition-all duration-[250ms] ease-in-out flex items-center justify-center touch-manipulation text-text-primary shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_4px_16px_rgba(0,0,0,0.3)] active:scale-[0.95] active:bg-[rgba(255,255,255,0.14)]"
-          onClick={() => setSheetOpen(true)}
+          onClick={() => { haptic('nudge'); setSheetOpen(true) }}
           aria-label="New Note"
         >
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
